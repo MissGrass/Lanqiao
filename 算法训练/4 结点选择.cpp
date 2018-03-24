@@ -23,75 +23,88 @@
 对于50%的数据， n <= 1000。
 对于100%的数据， n <= 100000。
 权值均为不超过1000的正整数。
+
+解题思路：
+
+这题模型是树形动态规划入门题目，
+dp[i][0]表示该节点不被选择，dp[i][1]表示该结点被选择。
+转移方程为:
+dp[u][1]+=dp[v][0];//选择了u结点，则与它邻接的结点不选；
+dp[u][0]+=max(dp[v][0]，dp[v][1]);不选择u结点，则与它邻接的结点选择结果最大的；
+应该特别注意：该题结点数量较大，应该选用邻接表存储边的关系
 */
-#include <iostream>
-#include <cstring>
-#include <algorithm>
-#define N 100000
-
-#define MAX(x, y)  ((x) > (y)?(x):(y))
-
-using namespace std;
-
-struct edge {
-	int to;
-	int next;
-};
-int tree[N];//树 
-
-int weight[N];//权值 
-
-edge edges[2*N];//边 
-
-int d[N][2];
-
-int len = 0;
-
-void add(int x, int y) {
-	edges[len].to = y;
-	edges[len].next = tree[x];
-	tree[x] = len++;
-}
-
-void dp(int root, int p) {
-	if(tree[root] == -1) {
-		d[root][0] = 0;
-		d[root][1] = weight[root];
-		return;
-	}
-	for(int i = tree[root]; i != -1; i = edges[i].next) {
-		int child = edges[i].to;
-		if(child == p)
-			continue;
-		if(!d[child][1])
-			dp(child, root);
-		d[root][0] += MAX(d[child][1], d[child][0]);
-		d[root][1] += d[child][0];
-	}
-	d[root][1] += weight[root];
-}
-int main() {
-	memset(tree, -1, sizeof(tree));//memset函数通常为新申请的内存做初始化工作，
-	// 其返回值为指向S的指针。memset的作用是在一段内存块中填充某个给定的值，
-	//它是对较大的结构体或数组进行清零操作的一种最快方法。 
-	int n;//树的结点数 
-	std::cin >> n;
-	for(int i = 1; i <= n; i++) 
-		std::cin >> weight[i];//输入权值 
-	int x, y;
-	for(int i = 0; i < n-1; i++) {
-		std::cin >> x >> y;//边的两边结点 
-		add(x, y);
-		add(y, x);
-	}
-	
-	dp(1, -1);
-	
-	int max = MAX(d[1][0], d[1][1]);
-	
-	std::cout << max << std::endl;
-    return 0;
-}
+#include<cstdio>  
+#include<cstring>  
+#define max(a,b) ((a)>(b)?(a):(b))  
+#define maxn 100010  
+bool vis[maxn];  
+int dp[maxn][2];  
+int father[maxn];  
+int head[maxn];  
+int n;  
+int cnt;  
+struct Edge  
+{  
+    int to,next;  
+}edge[2*maxn];  
+void add(int u,int v)  
+{  
+    edge[cnt].to=v;  
+    edge[cnt].next=head[u];  
+    head[u]=cnt++;  
+}  
+void treedp(int u)  
+{  
+    vis[u]=1;  
+    for(int i=head[u];i!=-1;i=edge[i].next)  
+    {  
+        int v=edge[i].to;  
+        if(!vis[v])  
+        {  
+            treedp(v);  
+            dp[u][1]+=dp[v][0];  
+            dp[u][0]+=max(dp[v][1],dp[v][0]);  
+        }  
+    }  
+}  
+void init()  
+{  
+    cnt=0;  
+    //memset(void *s,int ch,size_t n);
+	//将s中当前位置后面的n个字节用ch替换并返回s 
+    memset(dp,0,sizeof(dp)); 
+    memset(father,0,sizeof(father));  
+    memset(vis,0,sizeof(vis));  
+    memset(head,-1,sizeof(head));  
+}  
+int main()  
+{  
+    init();  
+    scanf("%d",&n);  
+    for(int i=1;i<=n;i++)  
+  	  scanf("%d",&dp[i][1]);  
+    int root=0;  
+    int begin=1;  
+    for(int i=0;i<n-1;i++)  
+    {  
+        int a,b;  
+        scanf("%d%d",&a,&b);  
+        add(a,b);  
+        add(b,a);  
+        father[b]=a;  
+        if(root==b||begin)  
+        {  
+            root=a;  
+        }  
+    }  
+      
+    while(father[root])  
+  		root=father[root];  
+    treedp(root);  
+    int ans;  
+    ans=max(dp[root][0],dp[root][1]);  
+    printf("%d\n",ans);  
+}  
 
 
 
